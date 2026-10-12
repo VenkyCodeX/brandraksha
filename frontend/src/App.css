@@ -869,6 +869,35 @@ td {
   font-weight: 700;
 }
 
+.analysis-note {
+  margin: 0 0 18px;
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.info-box {
+  border-color: rgba(95, 167, 255, 0.22);
+  background: rgba(95, 167, 255, 0.06);
+}
+
+.provider-options {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+
+.provider-options legend {
+  padding: 0 6px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
 .profile-form {
   display: flex;
   flex-direction: column;
@@ -1004,6 +1033,12 @@ td {
   border: 1px solid rgba(255, 123, 143, 0.2);
 }
 
+.risk-pill.critical {
+  background: rgba(255, 123, 143, 0.16);
+  color: #ffd6dd;
+  border: 1px solid rgba(255, 123, 143, 0.42);
+}
+
 .risk-pill.medium {
   background: rgba(240, 190, 106, 0.08);
   color: #f9d8a7;
@@ -1014,6 +1049,137 @@ td {
   background: rgba(97, 217, 159, 0.08);
   color: #bef0d0;
   border: 1px solid rgba(97, 217, 159, 0.2);
+}
+
+.scan-status-pill {
+  display: inline-flex;
+  max-width: min(260px, 45vw);
+  align-items: center;
+  justify-content: center;
+  padding: 8px 10px;
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  color: var(--text-soft);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.scan-finding {
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.scan-finding + .scan-finding {
+  margin-top: 18px;
+}
+
+.scan-finding .results-header h2 {
+  overflow-wrap: anywhere;
+}
+
+.logo-comparison {
+  display: grid;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+.logo-comparison h3 {
+  margin: 0 0 5px;
+  font-size: 0.98rem;
+}
+
+.logo-comparison > div > p,
+.logo-result > p {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.logo-submit-row {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+
+.logo-submit-row .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.logo-submit-row .secondary-button {
+  flex: 0 0 auto;
+  min-height: 42px;
+}
+
+.logo-result {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: rgba(17, 25, 36, 0.48);
+}
+
+.logo-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.logo-preview-grid figure {
+  min-width: 0;
+  margin: 0;
+}
+
+.logo-preview-grid img {
+  display: block;
+  width: 100%;
+  height: 160px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.logo-preview-grid figcaption {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+@media (max-width: 620px) {
+  .logo-submit-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .logo-preview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.analysis-status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0 0 14px;
+  color: var(--text-soft);
+  font-size: 0.78rem;
+}
+
+.analysis-status-row strong {
+  color: var(--accent-soft);
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
 }
 
 .risk-score-row {
