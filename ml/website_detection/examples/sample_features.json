@@ -1,0 +1,13 @@
+{
+  "url_length": 32,
+  "num_dots": 2,
+  "has_https": 1,
+  "has_ip": 0,
+  "num_subdirs": 2,
+  "num_params": 0,
+  "suspicious_words": 1,
+  "tld": "com",
+  "special_char_count": 2,
+  "digits_count": 0,
+  "entropy": 4.1
+}

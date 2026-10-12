@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>BrandProtect AI — Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #07111d;
+    color: #ebf3ff;
+    font-family: Inter, 'Segoe UI', sans-serif;
+    padding: 40px 32px 60px;
+    min-width: 900px;
+  }
+  h1 {
+    font-size: 1.7rem;
+    letter-spacing: -0.04em;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    color: #7f94b5;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 40px;
+  }
+
+  /* ── layout ── */
+  .diagram {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    align-items: center;
+  }
+
+  /* ── layers ── */
+  .layer {
+    width: 100%;
+    max-width: 1100px;
+  }
+  .layer-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #7f94b5;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+  .layer-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  /* ── arrow ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 6px 0;
+    width: 100%;
+    max-width: 1100px;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 28px;
+    background: rgba(110,168,255,0.3);
+  }
+  .arrow-head {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid rgba(110,168,255,0.4);
+  }
+  .arrow-label {
+    font-size: 0.65rem;
+    color: #7f94b5;
+    margin-top: 3px;
+    letter-spacing: 0.06em;
+  }
+
+  /* ── boxes ── */
+  .box {
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.16);
+    background: linear-gradient(180deg, rgba(16,28,41,0.97), rgba(11,19,30,0.96));
+    padding: 16px 18px;
+    flex: 1;
+    min-width: 0;
+  }
+  .box-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #ebf3ff;
+    margin-bottom: 6px;
+    letter-spacing: -0.01em;
+  }
+  .box-detail {
+    font-size: 0.7rem;
+    color: #a9bfd9;
+    line-height: 1.55;
+  }
+  .box-detail li {
+    list-style: none;
+    padding-left: 12px;
+    position: relative;
+    margin-bottom: 2px;
+  }
+  .box-detail li::before {
+    content: '·';
+    position: absolute;
+    left: 2px;
+    color: #6ea8ff;
+  }
+
+  /* colour variants */
+  .box.blue  { border-color: rgba(110,168,255,0.28); }
+  .box.violet{ border-color: rgba(124,108,255,0.28); }
+  .box.green { border-color: rgba(97,217,159,0.26); }
+  .box.amber { border-color: rgba(240,190,106,0.26); }
+  .box.red   { border-color: rgba(255,123,143,0.22); }
+  .box.muted { border-color: rgba(148,163,184,0.12); background: rgba(12,19,29,0.7); }
+
+  .box-title.blue   { color: #a9ccff; }
+  .box-title.violet { color: #d0caff; }
+  .box-title.green  { color: #b9efcf; }
+  .box-title.amber  { color: #f7d4a1; }
+  .box-title.red    { color: #ffbad0; }
+
+  /* badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+  .badge-live    { background: rgba(97,217,159,0.1);  border:1px solid rgba(97,217,159,0.25);  color:#b9efcf; }
+  .badge-sim     { background: rgba(240,190,106,0.1); border:1px solid rgba(240,190,106,0.25); color:#f7d4a1; }
+  .badge-ext     { background: rgba(110,168,255,0.1); border:1px solid rgba(110,168,255,0.25); color:#a9ccff; }
+
+  /* scoring table */
+  .score-table {
+    width: 100%;
+    max-width: 1100px;
+    margin-top: 8px;
+    border-collapse: collapse;
+  }
+  .score-table th {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #7f94b5;
+    font-weight: 700;
+    padding: 8px 12px;
+    background: rgba(12,21,32,0.9);
+    border-bottom: 1px solid rgba(148,163,184,0.14);
+    text-align: left;
+  }
+  .score-table td {
+    font-size: 0.72rem;
+    color: #a9bfd9;
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(148,163,184,0.08);
+    vertical-align: top;
+  }
+  .score-table tr:last-child td { border-bottom: none; }
+  .score-table td:first-child { color: #ebf3ff; font-weight: 600; }
+  .score-table td code {
+    font-family: monospace;
+    font-size: 0.68rem;
+    color: #6ea8ff;
+    background: rgba(110,168,255,0.07);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+
+  .section-gap { margin-top: 36px; }
+  .section-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #7f94b5;
+    margin-bottom: 10px;
+    max-width: 1100px;
+    width: 100%;
+  }
+</style>
+</head>
+<body>
+
+<h1>BrandProtect AI</h1>
+<p class="subtitle">Architecture Diagram &nbsp;·&nbsp; Digital Risk Protection Platform</p>
+
+<div class="diagram">
+
+  <!-- LAYER 1: Frontend -->
+  <div class="layer">
+    <div class="layer-label">Frontend &nbsp;·&nbsp; React 19 + Vite &nbsp;·&nbsp; Browser</div>
+    <div class="layer-row">
+      <div class="box blue">
+        <div class="box-title blue">Brand Profile</div>
+        <ul class="box-detail">
+          <li>Create / edit / delete brand profiles</li>
+          <li>Official domains, social accounts, apps</li>
+          <li>Validation &amp; profile summary panel</li>
+        </ul>
+      </div>
+      <div class="box violet">
+        <div class="box-title violet">Social Threat Analysis</div>
+        <ul class="box-detail">
+          <li>Single &amp; bulk username analysis</li>
+          <li>Manual or saved-brand reference</li>
+          <li>Scan history per brand</li>
+        </ul>
+      </div>
+      <div class="box amber">
+        <div class="box-title amber">Mobile App Analysis</div>
+        <ul class="box-detail">
+          <li>Apple App Store on-demand scan</li>
+          <li>Google Play simulated scan</li>
+          <li>Finding cards + scan history</li>
+        </ul>
+      </div>
+      <div class="box green">
+        <div class="box-title green">Website &amp; URL Analysis</div>
+        <ul class="box-detail">
+          <li>Manual candidate URL input</li>
+          <li>Saved brand domain references</li>
+          <li>Signal breakdown + risk score</li>
+        </ul>
+      </div>
+      <div class="box muted">
+        <div class="box-title">Threat Reports &amp; Investigations</div>
+        <ul class="box-detail">
+          <li>Unified scan history table</li>
+          <li>Filter by type / risk / search</li>
+          <li>Risk-sorted live data</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">HTTP / JSON &nbsp;(fetch API)</div>
+    <div class="arrow-line" style="height:14px"></div>
+  </div>
+
+  <!-- LAYER 2: Backend -->
+  <div class="layer">
+    <div class="layer-label">Backend &nbsp;·&nbsp; Node.js 20+ &nbsp;·&nbsp; Express</div>
+    <div class="layer-row">
+      <div class="box blue">
+        <div class="box-title blue">Brand CRUD &nbsp;<code style="font-size:0.6rem;color:#6ea8ff">/api/brands</code></div>
+        <ul class="box-detail">
+          <li>GET / POST / PUT / DELETE</li>
+          <li>URL + duplicate validation</li>
+          <li>Domain normalization</li>
+        </ul>
+      </div>
+      <div class="box violet">
+        <div class="box-title violet">Social Detection &nbsp;<span class="badge badge-live">Live</span></div>
+        <ul class="box-detail">
+          <li>Levenshtein similarity</li>
+          <li>Lookalike chars (0↔o, 1↔l/i)</li>
+          <li>Role-word detection</li>
+          <li>Payment / credential flags</li>
+          <li>X/Twitter enrichment (Nitter)</li>
+        </ul>
+      </div>
+      <div class="box amber">
+        <div class="box-title amber">App Store Monitor</div>
+        <ul class="box-detail">
+          <li>Apple iTunes Search API &nbsp;<span class="badge badge-live">Live</span></li>
+          <li>Google Play fixtures &nbsp;<span class="badge badge-sim">Simulated</span></li>
+          <li>Official-app exclusion</li>
+          <li>Name / publisher / desc scoring</li>
+          <li>Logo similarity (perceptual hash)</li>
+        </ul>
+      </div>
+      <div class="box green">
+        <div class="box-title green">Domain Detection &nbsp;<span class="badge badge-live">Live</span></div>
+        <ul class="box-detail">
+          <li>Damerau-Levenshtein hostname sim</li>
+          <li>Lookalike character detection</li>
+          <li>Added-word detection</li>
+          <li>TLD-only diff → no risk points</li>
+        </ul>
+      </div>
+      <div class="box muted">
+        <div class="box-title">Stats &amp; Scan History</div>
+        <ul class="box-detail">
+          <li>/api/stats — live counts</li>
+          <li>/api/scans/recent — merged feed</li>
+          <li>Social / domain / app scans</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- arrow -->
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">Mongoose ODM &nbsp;/&nbsp; iTunes HTTPS</div>
+    <div class="arrow-line" style="height:14px"></div>
+  </div>
+
+  <!-- LAYER 3: Data + External -->
+  <div class="layer">
+    <div class="layer-label">Storage &amp; External APIs</div>
+    <div class="layer-row">
+      <div class="box blue" style="flex:2">
+        <div class="box-title blue">MongoDB Atlas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:8px">
+          <div>
+            <div style="font-size:0.65rem;font-weight:700;color:#7f94b5;text-transform:uppercase;margin-bottom:4px">Brand</div>
+            <ul class="box-detail">
+              <li>brandName</li>
+              <li>officialDomains[]</li>
+              <li>socialAccounts[]</li>
+              <li>officialApps[]</li>
+              <li>websiteUrl, logoUrl</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:0.65rem;font-weight:700;color:#7f94b5;text-transform:uppercase;margin-bottom:4px">AppStoreScan</div>
+            <ul class="box-detail">
+              <li>brandId (ref)</li>
+              <li>source (Apple / GP)</li>
+              <li>findings[]</li>
+              <li>scannedAt, countryCode</li>
+              <li>queryTerms[]</li>
+            </ul>
+          </div>
+          <div>
+            <div style="font-size:0.65rem;font-weight:700;color:#7f94b5;text-transform:uppercase;margin-bottom:4px">SocialScan / DomainScan</div>
+            <ul class="box-detail">
+              <li>brandId (ref)</li>
+              <li>candidateUsername / Hostname</li>
+              <li>score, riskLevel, status</li>
+              <li>reasons[], limitations[]</li>
+              <li>analyzedAt</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="box amber" style="flex:1">
+        <div class="box-title amber">Apple iTunes Search API &nbsp;<span class="badge badge-ext">External</span></div>
+        <ul class="box-detail">
+          <li>Public · no API key required</li>
+          <li>GET /search?term=…&amp;entity=software</li>
+          <li>Up to 5 terms · 50 results each</li>
+          <li>Returns trackName, bundleId,</li>
+          <li>artistName, sellerName, desc,</li>
+          <li>artworkUrl, trackViewUrl</li>
+        </ul>
+      </div>
+      <div class="box muted" style="flex:1">
+        <div class="box-title">ML Baseline &nbsp;<span class="badge badge-sim">Standalone</span></div>
+        <ul class="box-detail">
+          <li>Python · scikit-learn</li>
+          <li>Logistic Regression (URL features)</li>
+          <li>Not connected to Express API</li>
+          <li>ml/website_detection/</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scoring tables -->
+  <div class="section-gap" style="width:100%;max-width:1100px">
+    <div class="section-title">Detection &amp; Scoring Logic</div>
+    <table class="score-table">
+      <thead>
+        <tr>
+          <th style="width:180px">Module</th>
+          <th>Key Signals</th>
+          <th style="width:220px">Risk Thresholds</th>
+          <th style="width:180px">Official Exclusion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Social Username</td>
+          <td>Levenshtein similarity (+15–50) · lookalike chars · role-word (+reason) · payment (+30) · credential (+40)</td>
+          <td>LOW &lt;30 · MED 30–59 · HIGH 60–79 · CRIT ≥80</td>
+          <td>Normalized exact match → <code>OFFICIAL_MATCH</code></td>
+        </tr>
+        <tr>
+          <td>Domain Hostname</td>
+          <td>Damerau-Levenshtein sim (+10–45) · lookalike chars · added brand word (+10) · TLD-only diff = 0 pts</td>
+          <td>LOW &lt;30 · MED 30–54 · HIGH 55–74 · CRIT ≥75</td>
+          <td>Exact domain or subdomain → <code>OFFICIAL_MATCH</code></td>
+        </tr>
+        <tr>
+          <td>App Store (Apple &amp; GP)</td>
+          <td>Name similarity (+10–40) · diff bundle ID (+25) · diff publisher (+20) · brand in description (+10) · logo hash sim (+15 if ≥70%)</td>
+          <td>Threshold ≥20 · LOW &lt;30 · MED 30–59 · HIGH 60–79 · CRIT ≥80</td>
+          <td>Bundle ID / track ID / name+publisher → excluded</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+</body>
+</html>

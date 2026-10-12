@@ -16,6 +16,7 @@ function emptyDraft() {
 		description: '',
 		region: '',
 		logoUrl: '',
+		officialDomains: [],
 		socialAccounts: [],
 		officialApps: [],
 	}
@@ -31,6 +32,9 @@ function toDraft(profile) {
 		description: typeof profile.description === 'string' ? profile.description : '',
 		region: typeof profile.region === 'string' ? profile.region : '',
 		logoUrl: typeof profile.logoUrl === 'string' ? profile.logoUrl : '',
+		officialDomains: Array.isArray(profile.officialDomains)
+			? profile.officialDomains.filter((domain) => typeof domain === 'string').map((domain) => ({ id: createId(), value: domain }))
+			: [],
 		socialAccounts: Array.isArray(profile.socialAccounts)
 			? profile.socialAccounts.filter((account) => account && typeof account === 'object').map((account) => ({
 				id: String(account._id || account.id || createId()),
@@ -71,6 +75,7 @@ function toApiPayload(draft) {
 		description: draft.description.trim(),
 		region: draft.region.trim(),
 		logoUrl: draft.logoUrl.trim(),
+		officialDomains: draft.officialDomains.map((domain) => domain.value.trim()).filter(Boolean).map(normalizeOfficialDomain),
 		socialAccounts: draft.socialAccounts.map((account) => ({
 			platform: account.platform,
 			username: normalizeUsername(account.username || ''),
@@ -118,11 +123,38 @@ function isValidUrl(value) {
 	}
 }
 
+function normalizeOfficialDomain(value) {
+	const trimmed = value.trim()
+	const hasProtocol = /^[a-z][a-z\d+.-]*:\/\//i.test(trimmed)
+	const url = new URL(hasProtocol ? trimmed : `https://${trimmed}`)
+	const hostname = url.hostname.toLowerCase().replace(/\.$/, '')
+	if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.port ||
+		(url.pathname !== '/' || url.search || url.hash) || !hostname.includes('.') ||
+		hostname === 'localhost' || hostname.endsWith('.localhost') || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
+		throw new Error('Enter a public hostname only, without a port, path, query, or fragment.')
+	}
+	return hostname
+}
+
 function validateDraft(draft) {
 	const errors = {}
 	if (!draft.brandName.trim()) errors.brandName = 'Brand or company name is required.'
 	if (!isValidUrl(draft.websiteUrl)) errors.websiteUrl = 'Enter a valid http or https URL.'
 	if (!isValidUrl(draft.logoUrl)) errors.logoUrl = 'Enter a valid http or https URL.'
+	const normalizedDomains = []
+	for (const domain of draft.officialDomains) {
+		if (!domain.value.trim()) continue
+		try {
+			normalizedDomains.push(normalizeOfficialDomain(domain.value))
+		} catch (error) {
+			errors[`officialDomain:${domain.id}`] = error.message || 'Enter a valid public hostname.'
+		}
+	}
+	if (new Set(normalizedDomains).size !== normalizedDomains.length) {
+		for (const domain of draft.officialDomains) {
+			if (domain.value.trim()) errors[`officialDomain:${domain.id}`] = 'This official domain is already listed.'
+		}
+	}
 
 	for (const account of draft.socialAccounts) {
 		const username = normalizeUsername(account.username || '')
@@ -253,6 +285,28 @@ function BrandProfilePage() {
 		setHasUnsavedChanges(true)
 		setErrors({})
 		setMessage('')
+	}
+
+	function updateOfficialDomain(id, value) {
+		setDraft((current) => ({
+			...current,
+			officialDomains: current.officialDomains.map((domain) => domain.id === id ? { ...domain, value } : domain),
+		}))
+		setHasUnsavedChanges(true)
+		setErrors({})
+		setMessage('')
+	}
+
+	function addOfficialDomain() {
+		setDraft((current) => ({ ...current, officialDomains: [...current.officialDomains, { id: createId(), value: '' }] }))
+		setHasUnsavedChanges(true)
+		setMessage('')
+	}
+
+	function removeOfficialDomain(id) {
+		setDraft((current) => ({ ...current, officialDomains: current.officialDomains.filter((domain) => domain.id !== id) }))
+		setHasUnsavedChanges(true)
+		setErrors({})
 	}
 
 	function addAccount() {
@@ -423,6 +477,18 @@ function BrandProfilePage() {
 								<input type="url" value={draft.websiteUrl} onChange={(event) => updateDraft('websiteUrl', event.target.value)} placeholder="https://example.com" aria-invalid={Boolean(errors.websiteUrl)} />
 								{errors.websiteUrl && <small role="alert">{errors.websiteUrl}</small>}
 							</label>
+							<div className="field field-full official-domain-fields">
+								<span>Other official domains</span>
+								<p>These are comparison references only. A domain extension difference alone is not treated as suspicious.</p>
+								{draft.officialDomains.map((domain, index) => (
+									<div className="official-domain-row" key={domain.id}>
+										<input value={domain.value} onChange={(event) => updateOfficialDomain(domain.id, event.target.value)} aria-label={`Official domain ${index + 1}`} placeholder="example.com" aria-invalid={Boolean(errors[`officialDomain:${domain.id}`])} />
+										<button type="button" className="remove-button" onClick={() => removeOfficialDomain(domain.id)} aria-label={`Remove official domain ${index + 1}`}>Remove</button>
+										{errors[`officialDomain:${domain.id}`] && <small role="alert">{errors[`officialDomain:${domain.id}`]}</small>}
+									</div>
+								))}
+								<button type="button" className="add-button" onClick={addOfficialDomain}><span aria-hidden="true">+</span> Add official domain</button>
+							</div>
 							<label className="field">
 								<span>Industry</span>
 								<input value={draft.industry} onChange={(event) => updateDraft('industry', event.target.value)} placeholder="e.g. Financial services" />
@@ -512,6 +578,7 @@ function BrandProfilePage() {
 						<ReviewItem label="Region" value={draft.region || 'Not provided'} />
 						<ReviewItem label="Description" value={draft.description || 'Not provided'} />
 						<ReviewItem label="Official logo" value={draft.logoUrl || 'Not provided'} />
+						<ReviewItem label="Official domains" value={draft.officialDomains.map((domain) => domain.value).filter(Boolean).join(', ') || 'Website URL only or none added'} />
 					</dl>
 					<div className="review-group">
 						<h3>Social accounts <span>{draft.socialAccounts.length}</span></h3>

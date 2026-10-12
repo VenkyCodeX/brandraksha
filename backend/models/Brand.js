@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { normalizeOfficialDomain } = require('../services/domainDetectionService');
 
 const SOCIAL_PLATFORMS = ['Instagram', 'Facebook', 'X', 'LinkedIn', 'YouTube', 'Other'];
 const APP_PLATFORMS = ['Android', 'iOS', 'Other'];
@@ -52,6 +53,23 @@ const brandSchema = new mongoose.Schema({
     default: '',
     trim: true,
     validate: { validator: isOptionalHttpUrl, message: 'Website URL must use http or https.' },
+  },
+  officialDomains: {
+    type: [{
+      type: String,
+      trim: true,
+      validate: {
+        validator(value) {
+          try {
+            return normalizeOfficialDomain(value) === value;
+          } catch {
+            return false;
+          }
+        },
+        message: 'Official domains must be normalized public hostnames.',
+      },
+    }],
+    default: [],
   },
   industry: { type: String, default: '', trim: true },
   description: { type: String, default: '', trim: true },

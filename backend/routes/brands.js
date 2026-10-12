@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const Brand = require('../models/Brand');
+const { normalizeOfficialDomain } = require('../services/domainDetectionService');
 
 const router = express.Router();
 const SOCIAL_PLATFORMS = ['Instagram', 'Facebook', 'X', 'LinkedIn', 'YouTube', 'Other'];
@@ -39,6 +40,27 @@ function validateBrandPayload(body) {
   for (const field of ['websiteUrl', 'logoUrl']) {
     if (!isOptionalHttpUrl(payload[field])) errors.push(`${field} must be a valid http or https URL.`);
   }
+
+  if (body.officialDomains !== undefined && !Array.isArray(body.officialDomains)) {
+    errors.push('officialDomains must be an array.');
+  }
+  const officialDomains = Array.isArray(body.officialDomains) ? body.officialDomains : [];
+  const normalizedDomains = [];
+  for (const [index, domain] of officialDomains.entries()) {
+    if (typeof domain !== 'string') {
+      errors.push(`officialDomains[${index}] must be a string.`);
+      continue;
+    }
+    try {
+      normalizedDomains.push(normalizeOfficialDomain(domain));
+    } catch (error) {
+      errors.push(`officialDomains[${index}] is invalid: ${error.message}`);
+    }
+  }
+  if (new Set(normalizedDomains).size !== normalizedDomains.length) {
+    errors.push('officialDomains cannot contain duplicates after normalization.');
+  }
+  payload.officialDomains = [...new Set(normalizedDomains)];
 
   if (body.socialAccounts !== undefined && !Array.isArray(body.socialAccounts)) {
     errors.push('socialAccounts must be an array.');

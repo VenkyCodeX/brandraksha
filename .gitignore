@@ -3,3 +3,7 @@ frontend/dist/
 **/.env
 **/.env.*
 !**/.env.example
+ml/website_detection/.venv/
+ml/website_detection/artifacts/
+ml/website_detection/reports/
+ml/website_detection/data/raw/*.csv

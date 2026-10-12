@@ -1,0 +1,257 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Prepare URL risk dataset",
+			"type": "shell",
+			"command": "C:/Users/bunny/AppData/Local/Programs/Python/Python315/python.exe",
+			"args": [
+				"ml/website_detection/prepare_dataset.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Create ML virtual environment",
+			"type": "shell",
+			"command": "C:/Users/bunny/AppData/Local/Programs/Python/Python315/python.exe",
+			"args": [
+				"-m",
+				"venv",
+				"ml/website_detection/.venv"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Install ML baseline dependencies",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"pip",
+				"install",
+				"-r",
+				"ml/website_detection/requirements.txt"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Prepare website dataset",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/prepare_dataset.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Train URL-risk baseline",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/train.py",
+				"--positive-label",
+				"1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Evaluate saved URL model",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/evaluate.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Test ML feature preparation",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"unittest",
+				"discover",
+				"-s",
+				"ml/website_detection",
+				"-p",
+				"test_*.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Test ML data preparation",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"unittest",
+				"discover",
+				"-s",
+				"ml/website_detection",
+				"-p",
+				"test_*.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Smoke test URL model prediction",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-c",
+				"import json,sys; from pathlib import Path; sys.path.insert(0,str(Path('ml/website_detection').resolve())); import joblib; from predict import predict_features; artifact=joblib.load('ml/website_detection/artifacts/url_risk_pipeline.joblib'); features={'url_length':32,'num_dots':2,'has_https':1,'has_ip':0,'num_subdirs':2,'num_params':0,'suspicious_words':1,'tld':'com','special_char_count':2,'digits_count':0,'entropy':4.1}; print(json.dumps(predict_features(artifact,features),indent=2))"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Smoke test URL model prediction v2",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-c",
+				"import json,sys; from pathlib import Path; sys.path.insert(0, str(Path(\"ml/website_detection\").resolve())); import joblib; from predict import predict_features; artifact=joblib.load(\"ml/website_detection/artifacts/url_risk_pipeline.joblib\"); features={\"url_length\":32,\"num_dots\":2,\"has_https\":1,\"has_ip\":0,\"num_subdirs\":2,\"num_params\":0,\"suspicious_words\":1,\"tld\":\"com\",\"special_char_count\":2,\"digits_count\":0,\"entropy\":4.1}; print(json.dumps(predict_features(artifact,features),indent=2))"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Smoke test URL model CLI",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/predict.py",
+				"--features-json",
+				"ml/website_detection/examples/sample_features.json"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final ML preprocessing tests",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"unittest",
+				"discover",
+				"-s",
+				"ml/website_detection",
+				"-p",
+				"test_*.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final backend test suite",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"--prefix",
+				"backend",
+				"test"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final frontend production build",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"--prefix",
+				"frontend",
+				"run",
+				"build"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final frontend lint",
+			"type": "shell",
+			"command": "npm.cmd",
+			"args": [
+				"--prefix",
+				"frontend",
+				"run",
+				"lint"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Refresh dataset provenance report",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/prepare_dataset.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Retrain with verified labels",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/train.py",
+				"--positive-label",
+				"1"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final URL model evaluation",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"ml/website_detection/evaluate.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Final URL ML unit tests",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"unittest",
+				"discover",
+				"-s",
+				"ml/website_detection",
+				"-p",
+				"test_*.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Status check ML tests",
+			"type": "shell",
+			"command": "ml/website_detection/.venv/Scripts/python.exe",
+			"args": [
+				"-m",
+				"unittest",
+				"discover",
+				"-s",
+				"ml/website_detection",
+				"-p",
+				"test_*.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}

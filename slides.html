@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>BrandProtect AI — Demo Slides</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #07111d;
+  color: #ebf3ff;
+  font-family: Inter, 'Segoe UI', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+.deck {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 64px 80px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.slide.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* nav */
+.nav {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  z-index: 100;
+}
+
+.nav button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(148,163,184,0.2);
+  background: rgba(15,24,36,0.9);
+  color: #ebf3ff;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.nav button:hover { background: rgba(110,168,255,0.12); }
+.nav button:disabled { opacity: 0.3; cursor: default; }
+
+.dots {
+  display: flex;
+  gap: 8px;
+}
+.dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(148,163,184,0.25);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.dot.active { background: #6ea8ff; }
+
+.slide-num {
+  position: fixed;
+  top: 24px;
+  right: 32px;
+  font-size: 0.7rem;
+  color: #7f94b5;
+  letter-spacing: 0.08em;
+}
+
+/* ── typography helpers ── */
+.eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #7f94b5;
+  margin-bottom: 14px;
+}
+
+h1 {
+  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+  line-height: 1.06;
+  letter-spacing: -0.06em;
+  color: #ebf3ff;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: -0.05em;
+  color: #ebf3ff;
+  margin-bottom: 18px;
+}
+
+.lead {
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  color: #a9bfd9;
+  line-height: 1.65;
+  max-width: 680px;
+}
+
+/* ── accent gradient text ── */
+.grad {
+  background: linear-gradient(90deg, #6ea8ff, #a78bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── pill / badge ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.pill-blue   { background: rgba(110,168,255,0.1); border:1px solid rgba(110,168,255,0.25); color:#a9ccff; }
+.pill-violet { background: rgba(124,108,255,0.1); border:1px solid rgba(124,108,255,0.25); color:#d0caff; }
+.pill-green  { background: rgba(97,217,159,0.1);  border:1px solid rgba(97,217,159,0.25);  color:#b9efcf; }
+.pill-amber  { background: rgba(240,190,106,0.1); border:1px solid rgba(240,190,106,0.25); color:#f7d4a1; }
+.pill-red    { background: rgba(255,123,143,0.1); border:1px solid rgba(255,123,143,0.25); color:#ffbad0; }
+
+/* ── card grid ── */
+.card-grid {
+  display: grid;
+  gap: 14px;
+  width: 100%;
+  max-width: 1000px;
+}
+.card-grid.cols2 { grid-template-columns: repeat(2, 1fr); }
+.card-grid.cols3 { grid-template-columns: repeat(3, 1fr); }
+.card-grid.cols4 { grid-template-columns: repeat(4, 1fr); }
+
+.card {
+  background: linear-gradient(180deg, rgba(16,28,41,0.97), rgba(11,19,30,0.96));
+  border: 1px solid rgba(148,163,184,0.14);
+  border-radius: 16px;
+  padding: 20px 20px 18px;
+}
+.card.blue   { border-color: rgba(110,168,255,0.26); }
+.card.violet { border-color: rgba(124,108,255,0.26); }
+.card.green  { border-color: rgba(97,217,159,0.24); }
+.card.amber  { border-color: rgba(240,190,106,0.24); }
+
+.card-icon {
+  font-size: 1.5rem;
+  margin-bottom: 10px;
+}
+.card h3 {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  color: #ebf3ff;
+}
+.card p {
+  font-size: 0.76rem;
+  color: #a9bfd9;
+  line-height: 1.55;
+}
+
+/* ── signal rows ── */
+.signal-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 860px;
+}
+.signal-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 80px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(13,23,35,0.8);
+  border: 1px solid rgba(148,163,184,0.12);
+}
+.signal-row .sig-label { font-size: 0.82rem; color: #ebf3ff; font-weight: 600; }
+.signal-row .sig-desc  { font-size: 0.74rem; color: #a9bfd9; }
+.signal-row .sig-pts   { font-size: 0.78rem; font-weight: 700; color: #6ea8ff; text-align: right; }
+
+/* ── two-col layout ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  width: 100%;
+  max-width: 1000px;
+  align-items: start;
+}
+
+/* ── flow steps ── */
+.flow {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  width: 100%;
+  max-width: 960px;
+  margin-top: 8px;
+}
+.flow-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+.flow-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -14px;
+  top: 18px;
+  color: rgba(110,168,255,0.4);
+  font-size: 1.1rem;
+}
+.flow-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  border: 1px solid rgba(110,168,255,0.25);
+  background: rgba(110,168,255,0.08);
+}
+.flow-step h4 {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #ebf3ff;
+  margin-bottom: 4px;
+}
+.flow-step p {
+  font-size: 0.68rem;
+  color: #7f94b5;
+  line-height: 1.5;
+  max-width: 130px;
+}
+
+/* ── score bar ── */
+.score-demo {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 560px;
+}
+.score-row {
+  display: grid;
+  grid-template-columns: 160px 1fr 60px;
+  align-items: center;
+  gap: 12px;
+}
+.score-label { font-size: 0.78rem; color: #a9bfd9; }
+.score-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(148,163,184,0.1);
+  overflow: hidden;
+}
+.score-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+.score-val { font-size: 0.78rem; font-weight: 700; color: #ebf3ff; text-align: right; }
+
+/* ── slide backgrounds ── */
+#s1 { background: radial-gradient(ellipse at 20% 50%, rgba(110,168,255,0.07) 0%, transparent 60%), #07111d; }
+#s2 { background: radial-gradient(ellipse at 80% 20%, rgba(124,108,255,0.07) 0%, transparent 55%), #07111d; }
+#s3 { background: radial-gradient(ellipse at 10% 80%, rgba(97,217,159,0.05) 0%, transparent 55%), #07111d; }
+#s4 { background: radial-gradient(ellipse at 90% 60%, rgba(240,190,106,0.06) 0%, transparent 55%), #07111d; }
+#s5 { background: radial-gradient(ellipse at 30% 30%, rgba(110,168,255,0.06) 0%, transparent 55%), #07111d; }
+#s6 { background: radial-gradient(ellipse at 60% 80%, rgba(124,108,255,0.07) 0%, transparent 55%), #07111d; }
+
+/* logo mark */
+.logo-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6ea8ff, #7c6cff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 28px rgba(110,168,255,0.2);
+}
+
+.tag-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+.divider {
+  width: 48px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6ea8ff, #7c6cff);
+  margin-bottom: 20px;
+}
+
+ul.bullet-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 560px;
+}
+ul.bullet-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #a9bfd9;
+  line-height: 1.55;
+}
+ul.bullet-list li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6ea8ff;
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+.not-impl {
+  font-size: 0.72rem;
+  color: #7f94b5;
+  margin-top: 16px;
+  padding: 10px 14px;
+  border-left: 2px solid rgba(148,163,184,0.2);
+  line-height: 1.6;
+  max-width: 560px;
+}
+</style>
+</head>
+<body>
+
+<div class="deck">
+
+  <!-- ── SLIDE 1: Title ── -->
+  <div class="slide active" id="s1">
+    <div class="logo-mark">B</div>
+    <p class="eyebrow">Kampus.VC Hackathon &nbsp;·&nbsp; Digital Risk Protection</p>
+    <h1><span class="grad">BrandProtect AI</span></h1>
+    <p class="lead">A Digital Risk Protection platform for detecting fake social profiles, impersonating mobile apps, and lookalike domains — built around a verified brand identity.</p>
+    <div class="tag-row">
+      <span class="pill pill-blue">Social Monitoring</span>
+      <span class="pill pill-amber">App Store Monitoring</span>
+      <span class="pill pill-green">Domain Analysis</span>
+      <span class="pill pill-violet">Brand Profile</span>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 2: Problem + Scope ── -->
+  <div class="slide" id="s2">
+    <p class="eyebrow">The Problem</p>
+    <h2>Brands are impersonated<br/>across every digital surface</h2>
+    <div class="divider"></div>
+    <div class="two-col">
+      <ul class="bullet-list">
+        <li>Fake social profiles steal customers and damage trust</li>
+        <li>Scam accounts impersonate support to harvest credentials</li>
+        <li>Lookalike apps on app stores distribute malware or phishing</li>
+        <li>Typosquat domains redirect users to fraudulent pages</li>
+        <li>Organizations have no unified view of their external exposure</li>
+      </ul>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div class="card amber">
+          <div class="card-icon">🎯</div>
+          <h3>Challenge Scope</h3>
+          <p>Brand Profile · Social Media Monitoring · App Store Monitoring · Lookalike Name Detection</p>
+        </div>
+        <div class="card blue">
+          <div class="card-icon">⚡</div>
+          <h3>Our Approach</h3>
+          <p>Deterministic heuristics with explainable signals — no black-box ML, every score is traceable to a reason.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 3: Brand Profile ── -->
+  <div class="slide" id="s3">
+    <p class="eyebrow">Core Feature 1 &nbsp;·&nbsp; Brand Profile</p>
+    <h2>Define your official<br/>digital presence</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols4" style="max-width:960px">
+      <div class="card blue">
+        <div class="card-icon">🏢</div>
+        <h3>Brand Identity</h3>
+        <p>Name, website, industry, region, logo URL, description</p>
+      </div>
+      <div class="card violet">
+        <div class="card-icon">👤</div>
+        <h3>Social Accounts</h3>
+        <p>Platform, username, profile URL — Instagram, Facebook, X, LinkedIn, YouTube</p>
+      </div>
+      <div class="card amber">
+        <div class="card-icon">📱</div>
+        <h3>Official Apps</h3>
+        <p>App name, bundle/package ID, publisher, store URL — iOS &amp; Android</p>
+      </div>
+      <div class="card green">
+        <div class="card-icon">🌐</div>
+        <h3>Official Domains</h3>
+        <p>Multiple reference hostnames for domain comparison analysis</p>
+      </div>
+    </div>
+    <p class="lead" style="margin-top:20px;font-size:0.82rem">Profiles are stored in MongoDB Atlas. All detection modules load official references from the saved profile — client-supplied overrides are ignored.</p>
+  </div>
+
+  <!-- ── SLIDE 4: Social + Domain Detection ── -->
+  <div class="slide" id="s4">
+    <p class="eyebrow">Core Feature 2 &nbsp;·&nbsp; Social &amp; Domain Monitoring</p>
+    <h2>Lookalike detection<br/>with explainable signals</h2>
+    <div class="divider"></div>
+    <div class="two-col">
+      <div>
+        <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#7f94b5;margin-bottom:10px">Social Username Signals</p>
+        <div class="signal-list">
+          <div class="signal-row">
+            <span class="sig-label">Name similarity ≥95%</span>
+            <span class="sig-desc">Levenshtein distance ratio</span>
+            <span class="sig-pts">+50 pts</span>
+          </div>
+          <div class="signal-row">
+            <span class="sig-label">Role word added</span>
+            <span class="sig-desc">support, help, verify, official…</span>
+            <span class="sig-pts">reason</span>
+          </div>
+          <div class="signal-row">
+            <span class="sig-label">Lookalike chars</span>
+            <span class="sig-desc">0↔o &nbsp; 1↔l &nbsp; 1↔i</span>
+            <span class="sig-pts">reason</span>
+          </div>
+          <div class="signal-row">
+            <span class="sig-label">Credential request</span>
+            <span class="sig-desc">User-reported flag</span>
+            <span class="sig-pts">+40 pts</span>
+          </div>
+          <div class="signal-row">
+            <span class="sig-label">Payment request</span>
+            <span class="sig-desc">User-reported flag</span>
+            <span class="sig-pts">+30 pts</span>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#7f94b5;margin-bottom:10px">Example: amazon_supp0rt</p>
+        <div class="score-demo">
+          <div class="score-row">
+            <span class="score-label">Name similarity</span>
+            <div class="score-bar-track"><div class="score-bar-fill" style="width:82%;background:linear-gradient(90deg,#6ea8ff,#7c6cff)"></div></div>
+            <span class="score-val">+45</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Lookalike char (0→o)</span>
+            <div class="score-bar-track"><div class="score-bar-fill" style="width:30%;background:#f0be6a"></div></div>
+            <span class="score-val">reason</span>
+          </div>
+          <div class="score-row">
+            <span class="score-label">Role word "supp"</span>
+            <div class="score-bar-track"><div class="score-bar-fill" style="width:30%;background:#f0be6a"></div></div>
+            <span class="score-val">reason</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+          <span class="pill pill-red">HIGH · 45/100</span>
+          <span style="font-size:0.74rem;color:#7f94b5">→ NEEDS_REVIEW</span>
+        </div>
+        <p style="font-size:0.72rem;color:#7f94b5;margin-top:12px">Official accounts return OFFICIAL_MATCH · score 0 · never flagged</p>
+        <p style="font-size:0.72rem;color:#7f94b5;margin-top:6px">Bulk scan mode: paste multiple usernames, get ranked results</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5: App Store Monitoring ── -->
+  <div class="slide" id="s5">
+    <p class="eyebrow">Core Feature 3 &nbsp;·&nbsp; App Store Monitoring</p>
+    <h2>Detect impersonating apps<br/>across Apple &amp; Google Play</h2>
+    <div class="divider"></div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-circle">🔍</div>
+        <h4>Search</h4>
+        <p>Brand name + app names queried against iTunes API (up to 5 terms, 50 results each)</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">✅</div>
+        <h4>Exclude Official</h4>
+        <p>Bundle ID, track ID, or exact name + publisher match → excluded</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">📊</div>
+        <h4>Score Candidates</h4>
+        <p>Name sim · diff publisher · diff bundle ID · brand in description · logo hash</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">🚨</div>
+        <h4>Surface Leads</h4>
+        <p>Score ≥20 → NEEDS_REVIEW with risk level and reasons</p>
+      </div>
+      <div class="flow-step">
+        <div class="flow-circle">💾</div>
+        <h4>Persist</h4>
+        <p>Scan saved to MongoDB · 20 most recent per brand</p>
+      </div>
+    </div>
+    <div class="card-grid cols2" style="max-width:700px;margin-top:20px">
+      <div class="card amber">
+        <div class="card-icon">🍎</div>
+        <h3>Apple App Store <span class="pill pill-green" style="font-size:0.58rem;padding:2px 7px">Live</span></h3>
+        <p>Real iTunes Search API · public · no key required · on-demand per scan</p>
+      </div>
+      <div class="card violet">
+        <div class="card-icon">🤖</div>
+        <h3>Google Play <span class="pill pill-amber" style="font-size:0.58rem;padding:2px 7px">Simulated</span></h3>
+        <p>No public search API · deterministic fixtures from brand profile · demonstrates full workflow</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 6: Summary + Evaluation ── -->
+  <div class="slide" id="s6">
+    <p class="eyebrow">Summary &amp; Evaluation Criteria</p>
+    <h2>What we built</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols4" style="max-width:960px">
+      <div class="card violet">
+        <h3>Social Monitoring <span style="color:#7f94b5;font-weight:400;font-size:0.72rem">30%</span></h3>
+        <p>Manual + bulk scan · Levenshtein · lookalike chars · role words · payment/credential flags · X enrichment · scan history</p>
+      </div>
+      <div class="card amber">
+        <h3>App Store Monitoring <span style="color:#7f94b5;font-weight:400;font-size:0.72rem">30%</span></h3>
+        <p>Apple live + Google Play simulated · official exclusion · name/publisher/desc/logo scoring · persisted history</p>
+      </div>
+      <div class="card blue">
+        <h3>Brand Profile <span style="color:#7f94b5;font-weight:400;font-size:0.72rem">15%</span></h3>
+        <p>Full CRUD · social accounts · official apps · domains · validation · used by all detection modules</p>
+      </div>
+      <div class="card green">
+        <h3>UX <span style="color:#7f94b5;font-weight:400;font-size:0.72rem">15%</span></h3>
+        <p>Dashboard · live stats · loading/error states · risk pills · investigations · threat reports · settings</p>
+      </div>
+    </div>
+    <div class="tag-row" style="margin-top:18px">
+      <span class="pill pill-green">✓ Lookalike Bonus — 0↔o · 1↔l/i · role words · spacing norm</span>
+      <span class="pill pill-blue">React 19 + Vite · Express · MongoDB Atlas</span>
+      <span class="pill pill-violet">Node.js · Python ML baseline (standalone)</span>
+    </div>
+    <p class="not-impl">Not implemented: live social platform APIs · Google Play live API · scheduled monitoring · auth/multi-tenant · website content fetching · ML-to-API integration</p>
+  </div>
+
+</div>
+
+<!-- nav controls -->
+<div class="nav">
+  <button id="prev" onclick="go(-1)" disabled>&#8592;</button>
+  <div class="dots" id="dots"></div>
+  <button id="next" onclick="go(1)">&#8594;</button>
+</div>
+<div class="slide-num" id="slideNum"></div>
+
+<script>
+  const slides = document.querySelectorAll('.slide')
+  const total = slides.length
+  let current = 0
+
+  const dotsEl = document.getElementById('dots')
+  const slideNumEl = document.getElementById('slideNum')
+
+  // build dots
+  slides.forEach((_, i) => {
+    const d = document.createElement('div')
+    d.className = 'dot' + (i === 0 ? ' active' : '')
+    d.onclick = () => goTo(i)
+    dotsEl.appendChild(d)
+  })
+
+  function goTo(n) {
+    slides[current].classList.remove('active')
+    dotsEl.children[current].classList.remove('active')
+    current = Math.max(0, Math.min(total - 1, n))
+    slides[current].classList.add('active')
+    dotsEl.children[current].classList.add('active')
+    document.getElementById('prev').disabled = current === 0
+    document.getElementById('next').disabled = current === total - 1
+    slideNumEl.textContent = (current + 1) + ' / ' + total
+  }
+
+  function go(dir) { goTo(current + dir) }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(1)
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(-1)
+  })
+
+  goTo(0)
+</script>
+</body>
+</html>
