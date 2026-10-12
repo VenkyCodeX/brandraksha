@@ -113,8 +113,13 @@ const pageMeta = {
 
 const profileFormDefaults = {
 	platform: 'Instagram',
+<<<<<<< HEAD
 	referenceMode: 'manual',
 	brandId: '',
+=======
+	brandId: '',
+	brandName: '',
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 	officialUsername: '',
 	suspiciousUsername: '',
 	profileUrl: '',
@@ -498,9 +503,19 @@ function OverviewPage({ reports, query, riskFilter, onQueryChange, onRiskFilterC
 function ProfileAnalyzerPage() {
 	const [analysisMode, setAnalysisMode] = useState('single')
 	const [form, setForm] = useState(profileFormDefaults)
+<<<<<<< HEAD
 	const [savedBrands, setSavedBrands] = useState([])
 	const [brandsLoading, setBrandsLoading] = useState(true)
 	const [brandsError, setBrandsError] = useState('')
+=======
+	const [brands, setBrands] = useState([])
+	const [providers, setProviders] = useState([])
+	const [logoInputs, setLogoInputs] = useState({})
+	const [logoResults, setLogoResults] = useState({})
+	const [logoLoading, setLogoLoading] = useState({})
+	const [isLoadingBrands, setIsLoadingBrands] = useState(true)
+	const [brandLoadError, setBrandLoadError] = useState('')
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 	const [errors, setErrors] = useState({})
 	const [isLoading, setIsLoading] = useState(false)
 	const [result, setResult] = useState(null)
@@ -516,7 +531,37 @@ function ProfileAnalyzerPage() {
 	const [isBulkScanning, setIsBulkScanning] = useState(false)
 	const [bulkError, setBulkError] = useState('')
 
-	const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
+	const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000').replace(/\/$/, '')
+
+	useEffect(() => {
+		const controller = new AbortController()
+
+		async function loadBrands() {
+			try {
+				const response = await fetch(`${apiBaseUrl}/api/brands`, { signal: controller.signal })
+				const payload = await response.json().catch(() => null)
+				if (!response.ok || payload?.status !== 'success' || !Array.isArray(payload.data?.brands)) {
+					throw new Error(payload?.error?.message || 'Saved brand profiles could not be loaded.')
+				}
+				const loadedBrands = payload.data.brands.map((brand) => ({
+					...brand,
+					id: String(brand._id || brand.id || ''),
+				}))
+				setBrands(loadedBrands)
+				setForm((current) => {
+					if (current.brandId || current.brandName || current.officialUsername || !loadedBrands.length) return current
+					return { ...current, brandId: loadedBrands[0].id, brandName: loadedBrands[0].brandName || '' }
+				})
+			} catch (error) {
+				if (!controller.signal.aborted) setBrandLoadError(error.message || 'Saved brand profiles could not be loaded.')
+			} finally {
+				if (!controller.signal.aborted) setIsLoadingBrands(false)
+			}
+		}
+
+		loadBrands()
+		return () => controller.abort()
+	}, [apiBaseUrl])
 
 	useEffect(() => {
 		const controller = new AbortController()
@@ -566,19 +611,33 @@ function ProfileAnalyzerPage() {
 
 	function handleChange(event) {
 		const { name, value, type, checked } = event.target
-		setForm((current) => ({
-			...current,
-			[name]: type === 'checkbox' ? checked : value,
-		}))
+		if (name === 'brandId') {
+			const brand = brands.find((item) => item.id === value)
+			setForm((current) => ({ ...current, brandId: value, brandName: brand?.brandName || '' }))
+		} else {
+			setForm((current) => ({
+				...current,
+				[name]: type === 'checkbox' ? checked : value,
+			}))
+		}
 		setErrors((current) => ({ ...current, [name]: '' }))
 	}
 
 	function validateForm() {
 		const nextErrors = {}
+		const candidates = form.suspiciousUsername.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
 
 		if (!form.platform.trim()) nextErrors.platform = 'Please select a platform.'
+<<<<<<< HEAD
 		if (!form.suspiciousUsername.trim()) nextErrors.suspiciousUsername = 'Suspected username is required.'
 		if (form.referenceMode === 'brand' && !form.brandId) nextErrors.brandId = 'Select a saved brand profile.'
+=======
+		if (!form.brandId && !form.brandName.trim()) nextErrors.brandName = 'Brand name is required for a manual comparison.'
+		if (!candidates.length) nextErrors.suspiciousUsername = 'Enter at least one username or profile URL.'
+		if (candidates.length > 50) nextErrors.suspiciousUsername = 'Submit at most 50 candidates per scan.'
+		if (providers.length && candidates.length > 10) nextErrors.suspiciousUsername = 'Provider lookups are limited to 10 candidates per request.'
+		if (candidates.some((candidate) => candidate.length > 500)) nextErrors.suspiciousUsername = 'Each username or profile URL must be at most 500 characters.'
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 
 		setErrors(nextErrors)
 		return Object.keys(nextErrors).length === 0
@@ -588,6 +647,7 @@ function ProfileAnalyzerPage() {
 		event.preventDefault()
 		setSubmitError('')
 		setResult(null)
+		setLogoResults({})
 
 		if (!validateForm()) {
 			return
@@ -596,6 +656,7 @@ function ProfileAnalyzerPage() {
 		setIsLoading(true)
 
 		try {
+<<<<<<< HEAD
 			const requestBody = {
 				platform: form.platform,
 				candidateUsername: form.suspiciousUsername,
@@ -609,6 +670,30 @@ function ProfileAnalyzerPage() {
 			}
 
 			const response = await fetch(`${apiBaseUrl}/api/analyze/profile`, {
+=======
+			const candidates = form.suspiciousUsername.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
+			const reportedSignals = {}
+			if (form.paymentRequested) reportedSignals.paymentRequested = true
+			if (form.credentialRequested) reportedSignals.credentialRequested = true
+			const requestBody = {
+				candidates: candidates.map((candidate) => /^https?:\/\//i.test(candidate)
+					? { platform: form.platform, profileUrl: candidate }
+					: { platform: form.platform, username: candidate }),
+				providers,
+				reportedSignals,
+			}
+			if (form.brandId) {
+				requestBody.brandId = form.brandId
+			} else {
+				requestBody.brandName = form.brandName
+				requestBody.officialAccounts = form.officialUsername.trim()
+					? [{ platform: form.platform, username: form.officialUsername }]
+					: []
+			}
+			if (form.profileUrl.trim()) requestBody.profileUrl = form.profileUrl.trim()
+
+			const response = await fetch(`${apiBaseUrl}/api/social/scan-candidates`, {
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -619,20 +704,30 @@ function ProfileAnalyzerPage() {
 			const payload = await response.json().catch(() => null)
 
 			if (!response.ok) {
+<<<<<<< HEAD
 				throw new Error(payload?.error?.message || payload?.error || 'The profile analysis request could not be completed.')
+=======
+				throw new Error(payload?.error?.message || payload?.error || 'The candidate scan request could not be completed.')
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			}
 
 			if (!payload || typeof payload !== 'object') {
 				throw new Error('The server returned an invalid response.')
 			}
 
+<<<<<<< HEAD
 			const score = typeof payload.score === 'number' ? payload.score : payload.riskScore
 			if (typeof score !== 'number' || !Array.isArray(payload.reasons)) {
 				throw new Error('The profile analysis response was incomplete.')
+=======
+			if (!Array.isArray(payload.findings) || typeof payload.scanStatus !== 'string') {
+				throw new Error('The candidate scan response was incomplete.')
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			}
 
 			setResult({
 				...payload,
+<<<<<<< HEAD
 				score,
 				riskScore: score,
 				candidateUsername: payload.candidateUsername || payload.suspiciousUsername || form.suspiciousUsername,
@@ -643,6 +738,9 @@ function ProfileAnalyzerPage() {
 				profileUrl: form.profileUrl,
 				suspiciousBehavior: form.suspiciousBehavior,
 				credentialRequested: form.credentialRequested,
+=======
+				referenceSource: form.brandId ? 'Saved brand profile' : 'Manual brand details',
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			})
 
 			// Persist to scan history when a brand is selected (best-effort, non-blocking).
@@ -676,10 +774,16 @@ function ProfileAnalyzerPage() {
 	}
 
 	function handleReset() {
-		setForm(profileFormDefaults)
+		const firstBrand = brands[0]
+		setForm({
+			...profileFormDefaults,
+			brandId: firstBrand?.id || '',
+			brandName: firstBrand?.brandName || '',
+		})
 		setErrors({})
 		setSubmitError('')
 		setResult(null)
+<<<<<<< HEAD
 		setScanHistory([])
 		setSelectedScanId('')
 		setHistoryError('')
@@ -711,6 +815,49 @@ function ProfileAnalyzerPage() {
 			setBulkResults(results.sort((a, b) => (b.score ?? -1) - (a.score ?? -1)))
 		} finally {
 			setIsBulkScanning(false)
+=======
+		setProviders([])
+		setLogoInputs({})
+		setLogoResults({})
+		setLogoLoading({})
+	}
+
+	async function compareCandidateLogo(finding, logoKey, brandId) {
+		const candidateImageUrl = (logoInputs[logoKey] || '').trim()
+		if (!candidateImageUrl) {
+			setLogoResults((current) => ({
+				...current,
+				[logoKey]: { status: 'CANDIDATE_IMAGE_MISSING', explanation: 'Enter a candidate image URL to compare logos.' },
+			}))
+			return
+		}
+
+		setLogoLoading((current) => ({ ...current, [logoKey]: true }))
+		setLogoResults((current) => ({ ...current, [logoKey]: null }))
+		try {
+			const response = await fetch(`${apiBaseUrl}/api/analyze/logo`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					brandId,
+					candidateId: `${finding.candidate.platform}:${finding.candidate.username}`,
+					candidateUsername: finding.candidate.username,
+					candidateImageUrl,
+				}),
+			})
+			const payload = await response.json().catch(() => null)
+			if (!response.ok || payload?.ok !== true) {
+				throw new Error(payload?.error?.message || 'Logo comparison could not be completed.')
+			}
+			setLogoResults((current) => ({ ...current, [logoKey]: payload }))
+		} catch (error) {
+			setLogoResults((current) => ({
+				...current,
+				[logoKey]: { status: 'REQUEST_FAILED', explanation: error.message || 'Logo comparison could not be completed.' },
+			}))
+		} finally {
+			setLogoLoading((current) => ({ ...current, [logoKey]: false }))
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 		}
 	}
 
@@ -719,10 +866,24 @@ function ProfileAnalyzerPage() {
 			<div className="analyzer-header">
 				<div>
 					<p className="eyebrow">Threat intelligence</p>
+<<<<<<< HEAD
 					<h1>Social Threat Analysis</h1>
 				</div>
 				<div className="analyzer-badge">Manual candidate analysis · no live monitoring</div>
+=======
+					<h1>Review social candidates</h1>
+				</div>
+					<div className="analyzer-badge">Manual candidates · Not live monitoring</div>
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			</div>
+				<p className="analysis-note">Compare submitted handles with a saved brand profile or manually supplied references. Optional provider lookups query only those exact usernames; no discovery, scraping, or continuous monitoring is performed.</p>
+
+			{brandLoadError && (
+				<div className="message-box info-box" role="status">
+					<strong>Saved profiles unavailable.</strong>
+					<p>{brandLoadError} Manual comparison is still available.</p>
+				</div>
+			)}
 
 			<div className="platform-tabs" role="tablist" aria-label="Analysis mode">
 				<button type="button" role="tab" aria-selected={analysisMode === 'single'} className={`platform-tab ${analysisMode === 'single' ? 'active' : ''}`} onClick={() => setAnalysisMode('single')}>Single Profile</button>
@@ -792,6 +953,30 @@ function ProfileAnalyzerPage() {
 
 			{analysisMode === 'single' && <form className="profile-form" onSubmit={handleSubmit} noValidate>
 				<div className="form-grid">
+					{(brands.length > 0 || isLoadingBrands) && (
+						<label className="field">
+							<span>Brand reference</span>
+							<select name="brandId" value={form.brandId} onChange={handleChange}>
+								<option value="">Manual brand details</option>
+								{brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.brandName}</option>)}
+							</select>
+						</label>
+					)}
+
+					{!form.brandId && (
+						<>
+							<label className="field">
+								<span>Brand name</span>
+								<input type="text" name="brandName" value={form.brandName} onChange={handleChange} placeholder="Amazon" aria-invalid={Boolean(errors.brandName)} />
+								{errors.brandName && <small>{errors.brandName}</small>}
+							</label>
+							<label className="field">
+								<span>Official username (optional)</span>
+								<input type="text" name="officialUsername" value={form.officialUsername} onChange={handleChange} placeholder="amazon" />
+							</label>
+						</>
+					)}
+
 					<label className="field">
 						<span>Social platform</span>
 						<select name="platform" value={form.platform} onChange={handleChange} aria-invalid={Boolean(errors.platform)}>
@@ -805,6 +990,7 @@ function ProfileAnalyzerPage() {
 						{errors.platform && <small>{errors.platform}</small>}
 					</label>
 
+<<<<<<< HEAD
 					<label className="field">
 						<span>Official reference source</span>
 						<select name="referenceMode" value={form.referenceMode} onChange={handleChange}>
@@ -842,33 +1028,32 @@ function ProfileAnalyzerPage() {
 						<span>Candidate username</span>
 						<input
 							type="text"
+=======
+					<label className="field field-full">
+						<span>Candidate usernames or profile URLs</span>
+						<textarea
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 							name="suspiciousUsername"
 							value={form.suspiciousUsername}
 							onChange={handleChange}
-							placeholder="amazon_support"
+							placeholder={'amazon_support\nhttps://www.instagram.com/amazon_help/'}
+							rows="4"
 							aria-invalid={Boolean(errors.suspiciousUsername)}
 						/>
 						{errors.suspiciousUsername && <small>{errors.suspiciousUsername}</small>}
 					</label>
 
-					<label className="field">
-						<span>Profile URL (optional)</span>
-						<input
-							type="url"
-							name="profileUrl"
-							value={form.profileUrl}
-							onChange={handleChange}
-							placeholder="https://instagram.com/amazon_support"
-						/>
-					</label>
-
 					<label className="field field-full">
+<<<<<<< HEAD
 						<span>Additional context (not included in scoring)</span>
+=======
+						<span>Case notes (not scored)</span>
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 						<textarea
 							name="suspiciousBehavior"
 							value={form.suspiciousBehavior}
 							onChange={handleChange}
-							placeholder="Examples: asking for payment, collecting DMs, requesting credentials, impersonating support staff"
+							placeholder="Optional context for the human reviewer"
 							rows="5"
 						/>
 					</label>
@@ -892,17 +1077,51 @@ function ProfileAnalyzerPage() {
 						/>
 						<span>A password, OTP, or sensitive credential was requested</span>
 					</label>
+
+					<fieldset className="provider-options field-full">
+						<legend>Optional official API lookup</legend>
+						<label className="checkbox-row">
+							<input type="checkbox" checked={providers.includes('META_INSTAGRAM')} onChange={() => setProviders((current) => current.includes('META_INSTAGRAM') ? current.filter((item) => item !== 'META_INSTAGRAM') : [...current, 'META_INSTAGRAM'])} />
+							<span>Meta Instagram Business Discovery (eligible professional accounts)</span>
+						</label>
+						<label className="checkbox-row">
+							<input type="checkbox" checked={providers.includes('X_API')} onChange={() => setProviders((current) => current.includes('X_API') ? current.filter((item) => item !== 'X_API') : [...current, 'X_API'])} />
+							<span>X API username lookup (plan and access dependent)</span>
+						</label>
+						<label className="checkbox-row">
+							<input type="checkbox" checked={providers.includes('LINKEDIN')} onChange={() => setProviders((current) => current.includes('LINKEDIN') ? current.filter((item) => item !== 'LINKEDIN') : [...current, 'LINKEDIN'])} />
+							<span>LinkedIn (not available for arbitrary public profile lookup)</span>
+						</label>
+					</fieldset>
 				</div>
+				{!brands.length && !isLoadingBrands && !brandLoadError && (
+					<p className="analysis-note">No saved brand profiles are available. Add a brand name and any known official username for a manual comparison.</p>
+				)}
+				{isLoadingBrands && <p className="analysis-note" role="status">Checking for saved brand profiles…</p>}
 
 				<div className="form-actions">
+<<<<<<< HEAD
 						<button type="submit" className="primary-button" disabled={isLoading}>
 						{isLoading ? 'Analyzing…' : 'Analyze Profile'}
+=======
+					<button type="submit" className="primary-button" disabled={isLoading}>
+						{isLoading ? 'Reviewing candidates…' : 'Review Candidates'}
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</button>
 					<button type="button" className="secondary-button" onClick={handleReset}>
 						Reset
 					</button>
 				</div>
+<<<<<<< HEAD
 			</form>}
+=======
+				{isLoading && (
+					<p className="analysis-note" role="status">
+						Submitting {form.suspiciousUsername.split(/\r?\n/).filter((value) => value.trim()).length} candidate(s); requested provider lookups are in progress.
+					</p>
+				)}
+			</form>
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 
 			{analysisMode === 'single' && historyError && <div className="profile-message profile-error" role="alert">Could not load prior scans: {historyError}</div>}
 			{analysisMode === 'single' && isLoadingHistory && <div className="profile-message profile-loading" role="status">Loading saved scan history…</div>}
@@ -954,13 +1173,19 @@ function ProfileAnalyzerPage() {
 				<div className="results-panel" aria-live="polite">
 					<div className="results-header">
 						<div>
+<<<<<<< HEAD
 							<p className="eyebrow">Manual candidate assessment</p>
 							<h2>{result.candidateUsername}</h2>
+=======
+							<p className="eyebrow">Candidate intake complete</p>
+							<h2>{result.candidateCount} candidate{result.candidateCount === 1 ? '' : 's'}</h2>
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 						</div>
-						<div className={`risk-pill ${result.riskLevel.toLowerCase()}`}>
-							{result.riskLevel}
+						<div className="scan-status-pill">
+							{result.scanStatus.replaceAll('_', ' ')}
 						</div>
 					</div>
+<<<<<<< HEAD
 					<p className={`assessment-status ${result.status === 'OFFICIAL_MATCH' ? 'official-match' : ''}`}>
 						Review status: <strong>{result.status || 'NEEDS_REVIEW'}</strong>
 					</p>
@@ -991,14 +1216,107 @@ function ProfileAnalyzerPage() {
 								)}
 							</ul>
 						</div>
+=======
+					<div className="analysis-status-row">
+						<strong>{result.source === 'MANUAL_INPUT' ? 'Manual input' : result.source}</strong>
+						<span>{result.brand?.name || form.brandName} · {result.referenceSource}</span>
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</div>
+					{result.persistence?.status !== 'SAVED' && <p className="analysis-note">Scan history: {result.persistence?.message || 'not saved'}</p>}
+					{result.findings.map((finding, index) => {
+						const analysis = finding.analysis
+						const logoKey = `${index}:${finding.candidate.platform}:${finding.candidate.username}`
+						const logoResult = logoResults[logoKey]
+						return (
+							<article className="scan-finding" key={`${finding.candidate.platform}-${finding.candidate.username}-${index}`}>
+								<div className="results-header">
+									<div>
+										<p className="eyebrow">{finding.source === 'MANUAL_INPUT' ? 'Manual input' : finding.source} · {finding.candidate.platform}</p>
+										<h2>{finding.candidate.username}</h2>
+										{finding.candidate.profileUrl && <a href={finding.candidate.profileUrl} target="_blank" rel="noreferrer">Submitted profile URL</a>}
+									</div>
+									<div className={`risk-pill ${analysis.riskLevel.toLowerCase()}`}>{analysis.riskLevel}</div>
+								</div>
+								<div className="analysis-status-row">
+									<strong>{analysis.status.replaceAll('_', ' ')}</strong>
+									<span>Heuristic score: {analysis.riskScore}/100 · normalized: {analysis.normalizedUsername}</span>
+								</div>
+								<div className="result-grid">
+									<div className="result-card">
+										<h3>Detection reasons</h3>
+										<ul className="reason-list">{analysis.reasons.map((reason, reasonIndex) => <li key={`${reason}-${reasonIndex}`}>{reason}</li>)}</ul>
+									</div>
+									<div className="result-card">
+										<h3>Provider responses</h3>
+										{finding.providerResults.length ? (
+											<ul className="reason-list">{finding.providerResults.map((providerResult) => (
+												<li key={providerResult.provider}>
+													<strong>{providerResult.provider}: {providerResult.status}</strong>
+													{providerResult.profile && <span>Returned @{providerResult.profile.username}{providerResult.profile.displayName ? ` · ${providerResult.profile.displayName}` : ''}</span>}
+													{providerResult.message && <span>{providerResult.message}</span>}
+												</li>
+											))}</ul>
+										) : <p className="analysis-note">No provider lookup requested. The candidate was supplied manually.</p>}
+									</div>
+								</div>
+								<section className="logo-comparison" aria-label={`Logo comparison for ${finding.candidate.username}`}>
+									<div>
+										<h3>Optional logo comparison</h3>
+										<p>Visual evidence is separate from the username score and is never proof of impersonation.</p>
+									</div>
+									{result.brand?.id ? (
+										<div className="logo-submit-row">
+											<label className="field">
+												<span>Candidate image URL</span>
+												<input
+													type="url"
+													value={logoInputs[logoKey] || ''}
+													onChange={(event) => setLogoInputs((current) => ({ ...current, [logoKey]: event.target.value }))}
+													placeholder="https://images.example/candidate-logo.png"
+												/>
+											</label>
+											<button type="button" className="secondary-button" disabled={Boolean(logoLoading[logoKey])} onClick={() => compareCandidateLogo(finding, logoKey, result.brand.id)}>
+												{logoLoading[logoKey] ? 'Comparing…' : 'Compare logo'}
+											</button>
+										</div>
+									) : (
+										<p className="analysis-note">Save this brand profile with an official logo to enable reference comparison.</p>
+									)}
+									{logoLoading[logoKey] && <p className="analysis-note" role="status">Retrieving submitted image URLs and comparing normalized images…</p>}
+									{logoResult && (
+										<div className="logo-result" aria-live="polite">
+											<div className="analysis-status-row">
+												<strong>{logoResult.status?.replaceAll('_', ' ')}</strong>
+												{logoResult.similarityScore !== null && logoResult.similarityScore !== undefined && <span>Similarity: {logoResult.similarityScore}/100</span>}
+											</div>
+											{logoResult.comparisonMethod && <p className="analysis-note">Method: {logoResult.comparisonMethod}</p>}
+											<p>{logoResult.explanation}</p>
+											{logoResult.reviewRecommendation && <p className="analysis-note">Recommendation: {logoResult.reviewRecommendation.replaceAll('_', ' ')}</p>}
+											{logoResult.images && (
+												<div className="logo-preview-grid">
+													<figure><img src={logoResult.images.officialPreviewDataUrl} alt="Registered official brand logo preview" /><figcaption>Registered brand logo</figcaption></figure>
+													<figure><img src={logoResult.images.candidatePreviewDataUrl} alt="Submitted candidate image preview" /><figcaption>Submitted candidate image</figcaption></figure>
+												</div>
+											)}
+											{logoResult.limitations?.map((limitation) => <p className="analysis-note" key={limitation}>{limitation}</p>)}
+										</div>
+									)}
+								</section>
+								{analysis.limitations?.map((limitation) => <p className="analysis-note" key={limitation}>{limitation}</p>)}
+							</article>
+						)
+					})}
 
 					<div className="disclaimer-box">
+<<<<<<< HEAD
 						<strong>Limitations</strong>
 						<ul className="assessment-limitations">
 							{result.limitations?.map((limitation) => <li key={limitation}>{limitation}</li>)}
 							{!result.limitations?.length && <li>This heuristic does not prove fraud or confirm account ownership.</li>}
 						</ul>
+=======
+						{result.disclaimer}
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</div>
 
 					<div className="results-actions">

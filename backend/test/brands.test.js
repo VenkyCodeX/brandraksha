@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const { after, before, test } = require('node:test');
 const mongoose = require('mongoose');
 const { app } = require('../server');
+const Brand = require('../models/Brand');
 
 let server;
 let baseUrl;
@@ -27,8 +28,12 @@ async function postBrand(body) {
   });
 }
 
+<<<<<<< HEAD
 async function postAnalysis(body) {
 
+=======
+async function postProfile(body) {
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
   return fetch(`${baseUrl}/api/analyze/profile`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Connection: 'close' },
@@ -36,6 +41,7 @@ async function postAnalysis(body) {
   });
 }
 
+<<<<<<< HEAD
 async function postWebsiteAnalysis(body) {
   return fetch(`${baseUrl}/api/analyze/website`, {
     method: 'POST',
@@ -58,6 +64,8 @@ async function getAppStoreScans(brandId) {
   });
 }
 
+=======
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 test('health endpoint remains available', async () => {
   const response = await fetch(`${baseUrl}/api/health`, { headers: { Connection: 'close' } });
   const payload = await response.json();
@@ -106,15 +114,25 @@ test('brand endpoints reject malformed MongoDB IDs before querying', async () =>
   assert.equal(payload.error.code, 'INVALID_ID');
 });
 
+<<<<<<< HEAD
 test('profile analyzer preserves the legacy request shape and response fields', async () => {
   const response = await postAnalysis({
     officialUsername: 'example',
     suspiciousUsername: 'example_support',
     paymentRequested: false,
+=======
+test('profile analysis accepts manual brand references and returns structured heuristic results', async () => {
+  const response = await postProfile({
+    platform: 'instagram',
+    brandName: 'Amazon',
+    officialAccounts: [{ platform: 'Instagram', username: 'amazon' }],
+    suspiciousUsername: 'amazon_support',
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
   });
   const payload = await response.json();
 
   assert.equal(response.status, 200);
+<<<<<<< HEAD
   assert.equal(payload.status, 'NEEDS_REVIEW');
   assert.equal(payload.suspiciousUsername, 'example_support');
   assert.equal(payload.candidateUsername, 'example_support');
@@ -235,4 +253,56 @@ test('website analysis reports unavailable database without accepting client ref
 
   assert.equal(response.status, 503);
   assert.equal(payload.error.code, 'DATABASE_UNAVAILABLE');
+=======
+  assert.equal(payload.ok, true);
+  assert.equal(payload.status, 'NEEDS_REVIEW');
+  assert.equal(payload.suspiciousUsername, 'amazon_support');
+  assert.equal(payload.candidate.platform, 'Instagram');
+  assert.ok(payload.reasons.some((reason) => reason.includes('support')));
+  assert.match(payload.disclaimer, /not a probability or proof of fraud/);
+});
+
+test('profile analysis validates missing and invalid inputs', async () => {
+  const missing = await postProfile({ brandName: 'Amazon', officialAccounts: [], suspiciousUsername: '' });
+  const missingPayload = await missing.json();
+  const invalid = await postProfile({
+    platform: 'Unknown Network',
+    brandName: 'Amazon',
+    officialAccounts: [],
+    suspiciousUsername: 'candidate',
+    reportedSignals: { paymentRequested: 'yes' },
+  });
+  const invalidPayload = await invalid.json();
+
+  assert.equal(missing.status, 400);
+  assert.equal(missingPayload.error.code, 'VALIDATION_ERROR');
+  assert.equal(invalid.status, 400);
+  assert.equal(invalidPayload.error.code, 'VALIDATION_ERROR');
+});
+
+test('saved brand references take precedence over supplied official account lists', async () => {
+  const originalFindById = Brand.findById;
+  Brand.findById = async () => ({
+    brandName: 'Amazon',
+    socialAccounts: [{ platform: 'Instagram', username: 'amazon' }],
+  });
+
+  try {
+    const response = await postProfile({
+      brandId: '507f1f77bcf86cd799439011',
+      platform: 'Instagram',
+      suspiciousUsername: 'amazon',
+      officialAccounts: [{ platform: 'Instagram', username: 'not-the-saved-account' }],
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.ok, true);
+    assert.equal(payload.status, 'OFFICIAL_MATCH');
+    assert.equal(payload.evidence[0].signal, 'official_account_match');
+    assert.equal(payload.matchedOfficialAccount.username, 'amazon');
+  } finally {
+    Brand.findById = originalFindById;
+  }
+>>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 });
