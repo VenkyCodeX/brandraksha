@@ -245,6 +245,9 @@ function App() {
 				/>
 
 				<div className={`page-inner${activeView === 'overview' ? ' overview' : ''}`}>{renderContent()}</div>
+				<footer className="app-footer">
+					Developed with ❤️ by Team RISE
+				</footer>
 			</main>
 		</div>
 	)
