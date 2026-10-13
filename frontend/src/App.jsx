@@ -113,13 +113,8 @@ const pageMeta = {
 
 const profileFormDefaults = {
 	platform: 'Instagram',
-<<<<<<< HEAD
-	referenceMode: 'manual',
-	brandId: '',
-=======
 	brandId: '',
 	brandName: '',
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 	officialUsername: '',
 	suspiciousUsername: '',
 	profileUrl: '',
@@ -503,11 +498,6 @@ function OverviewPage({ reports, query, riskFilter, onQueryChange, onRiskFilterC
 function ProfileAnalyzerPage() {
 	const [analysisMode, setAnalysisMode] = useState('single')
 	const [form, setForm] = useState(profileFormDefaults)
-<<<<<<< HEAD
-	const [savedBrands, setSavedBrands] = useState([])
-	const [brandsLoading, setBrandsLoading] = useState(true)
-	const [brandsError, setBrandsError] = useState('')
-=======
 	const [brands, setBrands] = useState([])
 	const [providers, setProviders] = useState([])
 	const [logoInputs, setLogoInputs] = useState({})
@@ -515,7 +505,6 @@ function ProfileAnalyzerPage() {
 	const [logoLoading, setLogoLoading] = useState({})
 	const [isLoadingBrands, setIsLoadingBrands] = useState(true)
 	const [brandLoadError, setBrandLoadError] = useState('')
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 	const [errors, setErrors] = useState({})
 	const [isLoading, setIsLoading] = useState(false)
 	const [result, setResult] = useState(null)
@@ -628,16 +617,11 @@ function ProfileAnalyzerPage() {
 		const candidates = form.suspiciousUsername.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
 
 		if (!form.platform.trim()) nextErrors.platform = 'Please select a platform.'
-<<<<<<< HEAD
-		if (!form.suspiciousUsername.trim()) nextErrors.suspiciousUsername = 'Suspected username is required.'
-		if (form.referenceMode === 'brand' && !form.brandId) nextErrors.brandId = 'Select a saved brand profile.'
-=======
 		if (!form.brandId && !form.brandName.trim()) nextErrors.brandName = 'Brand name is required for a manual comparison.'
 		if (!candidates.length) nextErrors.suspiciousUsername = 'Enter at least one username or profile URL.'
 		if (candidates.length > 50) nextErrors.suspiciousUsername = 'Submit at most 50 candidates per scan.'
 		if (providers.length && candidates.length > 10) nextErrors.suspiciousUsername = 'Provider lookups are limited to 10 candidates per request.'
 		if (candidates.some((candidate) => candidate.length > 500)) nextErrors.suspiciousUsername = 'Each username or profile URL must be at most 500 characters.'
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 
 		setErrors(nextErrors)
 		return Object.keys(nextErrors).length === 0
@@ -656,21 +640,6 @@ function ProfileAnalyzerPage() {
 		setIsLoading(true)
 
 		try {
-<<<<<<< HEAD
-			const requestBody = {
-				platform: form.platform,
-				candidateUsername: form.suspiciousUsername,
-				paymentRequested: form.paymentRequested,
-				credentialRequested: form.credentialRequested,
-			}
-			if (form.referenceMode === 'brand') {
-				requestBody.brandId = form.brandId
-			} else {
-				requestBody.officialUsername = form.officialUsername
-			}
-
-			const response = await fetch(`${apiBaseUrl}/api/analyze/profile`, {
-=======
 			const candidates = form.suspiciousUsername.split(/\r?\n/).map((value) => value.trim()).filter(Boolean)
 			const reportedSignals = {}
 			if (form.paymentRequested) reportedSignals.paymentRequested = true
@@ -693,7 +662,6 @@ function ProfileAnalyzerPage() {
 			if (form.profileUrl.trim()) requestBody.profileUrl = form.profileUrl.trim()
 
 			const response = await fetch(`${apiBaseUrl}/api/social/scan-candidates`, {
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -704,43 +672,20 @@ function ProfileAnalyzerPage() {
 			const payload = await response.json().catch(() => null)
 
 			if (!response.ok) {
-<<<<<<< HEAD
-				throw new Error(payload?.error?.message || payload?.error || 'The profile analysis request could not be completed.')
-=======
 				throw new Error(payload?.error?.message || payload?.error || 'The candidate scan request could not be completed.')
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			}
 
 			if (!payload || typeof payload !== 'object') {
 				throw new Error('The server returned an invalid response.')
 			}
 
-<<<<<<< HEAD
-			const score = typeof payload.score === 'number' ? payload.score : payload.riskScore
-			if (typeof score !== 'number' || !Array.isArray(payload.reasons)) {
-				throw new Error('The profile analysis response was incomplete.')
-=======
 			if (!Array.isArray(payload.findings) || typeof payload.scanStatus !== 'string') {
 				throw new Error('The candidate scan response was incomplete.')
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			}
 
 			setResult({
 				...payload,
-<<<<<<< HEAD
-				score,
-				riskScore: score,
-				candidateUsername: payload.candidateUsername || payload.suspiciousUsername || form.suspiciousUsername,
-				platform: form.platform,
-				officialReference: form.referenceMode === 'brand'
-					? savedBrands.find((brand) => String(brand._id) === form.brandId)?.brandName || 'Saved brand profile'
-					: form.officialUsername || 'No official reference provided',
-				profileUrl: form.profileUrl,
-				suspiciousBehavior: form.suspiciousBehavior,
-				credentialRequested: form.credentialRequested,
-=======
 				referenceSource: form.brandId ? 'Saved brand profile' : 'Manual brand details',
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			})
 
 			// Persist to scan history when a brand is selected (best-effort, non-blocking).
@@ -783,39 +728,6 @@ function ProfileAnalyzerPage() {
 		setErrors({})
 		setSubmitError('')
 		setResult(null)
-<<<<<<< HEAD
-		setScanHistory([])
-		setSelectedScanId('')
-		setHistoryError('')
-	}
-
-	async function handleBulkScan(event) {
-		event.preventDefault()
-		setBulkError('')
-		setBulkResults([])
-		const usernames = bulkInput.split(/[\n,]+/).map((u) => u.trim().replace(/^@/, '')).filter(Boolean)
-		if (!usernames.length) { setBulkError('Enter at least one username.'); return }
-		if (!bulkBrandId) { setBulkError('Select a saved brand profile.'); return }
-		setIsBulkScanning(true)
-		try {
-			const results = await Promise.all(usernames.map(async (username) => {
-				try {
-					const response = await fetch(`${apiBaseUrl}/api/analyze/profile`, {
-						method: 'POST',
-						headers: { 'Content-Type': 'application/json' },
-						body: JSON.stringify({ candidateUsername: username, brandId: bulkBrandId, platform: bulkPlatform }),
-					})
-					const payload = await response.json().catch(() => null)
-					if (!response.ok) return { username, error: payload?.error?.message || 'Request failed' }
-					return { username, score: payload.score ?? payload.riskScore, riskLevel: payload.riskLevel, status: payload.status, reasons: payload.reasons }
-				} catch {
-					return { username, error: 'Request failed' }
-				}
-			}))
-			setBulkResults(results.sort((a, b) => (b.score ?? -1) - (a.score ?? -1)))
-		} finally {
-			setIsBulkScanning(false)
-=======
 		setProviders([])
 		setLogoInputs({})
 		setLogoResults({})
@@ -857,7 +769,6 @@ function ProfileAnalyzerPage() {
 			}))
 		} finally {
 			setLogoLoading((current) => ({ ...current, [logoKey]: false }))
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 		}
 	}
 
@@ -866,15 +777,9 @@ function ProfileAnalyzerPage() {
 			<div className="analyzer-header">
 				<div>
 					<p className="eyebrow">Threat intelligence</p>
-<<<<<<< HEAD
-					<h1>Social Threat Analysis</h1>
-				</div>
-				<div className="analyzer-badge">Manual candidate analysis · no live monitoring</div>
-=======
 					<h1>Review social candidates</h1>
 				</div>
 					<div className="analyzer-badge">Manual candidates · Not live monitoring</div>
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 			</div>
 				<p className="analysis-note">Compare submitted handles with a saved brand profile or manually supplied references. Optional provider lookups query only those exact usernames; no discovery, scraping, or continuous monitoring is performed.</p>
 
@@ -990,49 +895,9 @@ function ProfileAnalyzerPage() {
 						{errors.platform && <small>{errors.platform}</small>}
 					</label>
 
-<<<<<<< HEAD
-					<label className="field">
-						<span>Official reference source</span>
-						<select name="referenceMode" value={form.referenceMode} onChange={handleChange}>
-							<option value="manual">Enter a reference manually</option>
-							<option value="brand">Use a saved brand profile</option>
-						</select>
-					</label>
-
-					{form.referenceMode === 'manual' ? (
-						<label className="field">
-							<span>Official username (optional)</span>
-							<input
-								type="text"
-								name="officialUsername"
-								value={form.officialUsername}
-								onChange={handleChange}
-								placeholder="amazon"
-								aria-invalid={Boolean(errors.officialUsername)}
-							/>
-							{errors.officialUsername && <small>{errors.officialUsername}</small>}
-						</label>
-					) : (
-						<label className="field">
-							<span>Saved brand profile</span>
-							<select name="brandId" value={form.brandId} onChange={handleChange} disabled={brandsLoading || savedBrands.length === 0} aria-invalid={Boolean(errors.brandId)}>
-								<option value="">{brandsLoading ? 'Loading saved brands…' : 'Select a brand profile'}</option>
-								{savedBrands.map((brand) => <option key={brand._id} value={brand._id}>{brand.brandName}</option>)}
-							</select>
-							{errors.brandId && <small>{errors.brandId}</small>}
-							{!brandsLoading && savedBrands.length === 0 && <small>No saved brand accounts are available.</small>}
-						</label>
-					)}
-
-					<label className="field">
-						<span>Candidate username</span>
-						<input
-							type="text"
-=======
 					<label className="field field-full">
 						<span>Candidate usernames or profile URLs</span>
 						<textarea
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 							name="suspiciousUsername"
 							value={form.suspiciousUsername}
 							onChange={handleChange}
@@ -1044,11 +909,7 @@ function ProfileAnalyzerPage() {
 					</label>
 
 					<label className="field field-full">
-<<<<<<< HEAD
-						<span>Additional context (not included in scoring)</span>
-=======
 						<span>Case notes (not scored)</span>
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 						<textarea
 							name="suspiciousBehavior"
 							value={form.suspiciousBehavior}
@@ -1100,28 +961,19 @@ function ProfileAnalyzerPage() {
 				{isLoadingBrands && <p className="analysis-note" role="status">Checking for saved brand profiles…</p>}
 
 				<div className="form-actions">
-<<<<<<< HEAD
-						<button type="submit" className="primary-button" disabled={isLoading}>
-						{isLoading ? 'Analyzing…' : 'Analyze Profile'}
-=======
 					<button type="submit" className="primary-button" disabled={isLoading}>
 						{isLoading ? 'Reviewing candidates…' : 'Review Candidates'}
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</button>
 					<button type="button" className="secondary-button" onClick={handleReset}>
 						Reset
 					</button>
 				</div>
-<<<<<<< HEAD
-			</form>}
-=======
 				{isLoading && (
 					<p className="analysis-note" role="status">
 						Submitting {form.suspiciousUsername.split(/\r?\n/).filter((value) => value.trim()).length} candidate(s); requested provider lookups are in progress.
 					</p>
 				)}
 			</form>
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 
 			{analysisMode === 'single' && historyError && <div className="profile-message profile-error" role="alert">Could not load prior scans: {historyError}</div>}
 			{analysisMode === 'single' && isLoadingHistory && <div className="profile-message profile-loading" role="status">Loading saved scan history…</div>}
@@ -1173,54 +1025,16 @@ function ProfileAnalyzerPage() {
 				<div className="results-panel" aria-live="polite">
 					<div className="results-header">
 						<div>
-<<<<<<< HEAD
-							<p className="eyebrow">Manual candidate assessment</p>
-							<h2>{result.candidateUsername}</h2>
-=======
 							<p className="eyebrow">Candidate intake complete</p>
 							<h2>{result.candidateCount} candidate{result.candidateCount === 1 ? '' : 's'}</h2>
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 						</div>
 						<div className="scan-status-pill">
 							{result.scanStatus.replaceAll('_', ' ')}
 						</div>
 					</div>
-<<<<<<< HEAD
-					<p className={`assessment-status ${result.status === 'OFFICIAL_MATCH' ? 'official-match' : ''}`}>
-						Review status: <strong>{result.status || 'NEEDS_REVIEW'}</strong>
-					</p>
-
-					<div className="risk-score-row">
-						<span>Risk score</span>
-						<strong>{result.score}/100</strong>
-					</div>
-
-					<div className="result-grid">
-						<div className="result-card">
-							<h3>Context provided</h3>
-							<ul>
-								<li><span>Platform</span><strong>{result.platform}</strong></li>
-								<li><span>Official reference</span><strong>{result.officialReference}</strong></li>
-								<li><span>Profile URL</span><strong>{result.profileUrl || 'Not provided'}</strong></li>
-								<li><span>Behavior</span><strong>{result.suspiciousBehavior || 'Not provided'}</strong></li>
-							</ul>
-						</div>
-
-						<div className="result-card">
-							<h3>Assessment reasoning</h3>
-							<ul className="reason-list">
-								{result.reasons.length ? (
-									result.reasons.map((reason, index) => <li key={`${reason}-${index}`}>{reason}</li>)
-								) : (
-									<li>No specific reasons were returned by the backend.</li>
-								)}
-							</ul>
-						</div>
-=======
 					<div className="analysis-status-row">
 						<strong>{result.source === 'MANUAL_INPUT' ? 'Manual input' : result.source}</strong>
 						<span>{result.brand?.name || form.brandName} · {result.referenceSource}</span>
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</div>
 					{result.persistence?.status !== 'SAVED' && <p className="analysis-note">Scan history: {result.persistence?.message || 'not saved'}</p>}
 					{result.findings.map((finding, index) => {
@@ -1308,15 +1122,7 @@ function ProfileAnalyzerPage() {
 					})}
 
 					<div className="disclaimer-box">
-<<<<<<< HEAD
-						<strong>Limitations</strong>
-						<ul className="assessment-limitations">
-							{result.limitations?.map((limitation) => <li key={limitation}>{limitation}</li>)}
-							{!result.limitations?.length && <li>This heuristic does not prove fraud or confirm account ownership.</li>}
-						</ul>
-=======
 						{result.disclaimer}
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
 					</div>
 
 					<div className="results-actions">
