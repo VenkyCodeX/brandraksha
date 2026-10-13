@@ -220,7 +220,7 @@ function App() {
 			<PlaceholderPage
 				title={pageMeta[activeView].title}
 				description="This dashboard section is scheduled for the next development stage."
-				detail="The BrandProtect AI workflow and reporting logic for this module will be implemented after the dashboard foundation is complete."
+				detail="The BrandRaksha workflow and reporting logic for this module will be implemented after the dashboard foundation is complete."
 			/>
 		)
 	}
@@ -270,7 +270,7 @@ function Sidebar({ activeView, onSelect, collapsed, onToggleCollapse, mobileOpen
 					</div>
 					{!collapsed && (
 						<div className="brand-copy">
-							<strong>BrandProtect AI</strong>
+							<strong>BrandRaksha</strong>
 						</div>
 					)}
 					<button
@@ -320,7 +320,7 @@ function Topbar({ title, query, onQueryChange, onToggleSidebar }) {
 					<MenuIcon />
 				</button>
 				<div className="header-copy-block">
-					<p className="eyebrow">BrandProtect AI</p>
+					<p className="eyebrow">BrandRaksha</p>
 					<h2>{title}</h2>
 				</div>
 			</div>
@@ -369,7 +369,7 @@ function OverviewPage({ reports, query, riskFilter, onQueryChange, onRiskFilterC
 		<>
 			<section className="hero-panel">
 				<div className="hero-copy-column">
-					<p className="eyebrow">BrandProtect AI</p>
+					<p className="eyebrow">BrandRaksha</p>
 					<h1>Detect digital threats.<br />Protect your brand.</h1>
 					<p className="hero-copy">
 						Investigate suspicious profiles, assess potential impersonation, and organize digital threat reports in one workspace.
