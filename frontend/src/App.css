@@ -1091,11 +1091,7 @@ td {
 
 .risk-pill.critical {
   background: rgba(255, 123, 143, 0.16);
-<<<<<<< HEAD
-  color: #ffd0d7;
-=======
   color: #ffd6dd;
->>>>>>> 0fdc5c7e1e07a369b137e1a80f999f73cbf0207e
   border: 1px solid rgba(255, 123, 143, 0.42);
 }
 
