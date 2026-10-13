@@ -856,7 +856,7 @@ function ProfileAnalyzerPage() {
 				</div>
 			)}
 
-			{analysisMode === 'single' && <form className="profile-form" onSubmit={handleSubmit} noValidate>
+			{analysisMode === 'single' && (<form className="profile-form" onSubmit={handleSubmit} noValidate>
 				<div className="form-grid">
 					{(brands.length > 0 || isLoadingBrands) && (
 						<label className="field">
@@ -973,7 +973,7 @@ function ProfileAnalyzerPage() {
 						Submitting {form.suspiciousUsername.split(/\r?\n/).filter((value) => value.trim()).length} candidate(s); requested provider lookups are in progress.
 					</p>
 				)}
-			</form>
+			</form>)}
 
 			{analysisMode === 'single' && historyError && <div className="profile-message profile-error" role="alert">Could not load prior scans: {historyError}</div>}
 			{analysisMode === 'single' && isLoadingHistory && <div className="profile-message profile-loading" role="status">Loading saved scan history…</div>}
